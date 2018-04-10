@@ -1,0 +1,10 @@
+﻿[Common]
+Demo.ExplorerView.GroupingPreset.Default=Vaikimisi
+
+[ExplorerView]
+Caption=Explorer Vaade
+NoData=Tulemusi pole.\nKontrolli filtrit.
+
+[AIMPML]
+FileAccessTime=Muutmise aeg
+FileCreationTime=Loomise aeg

@@ -1,0 +1,10 @@
+﻿[Common]
+Demo.ExplorerView.GroupingPreset.Default=По умолчанию
+
+[ExplorerView]
+Caption=Проводник (Демо)
+NoData=Нет данных для отображения.\nВозможно, фильтр был настроен неправильным образом.
+
+[AIMPML]
+FileAccessTime=Дата изменения
+FileCreationTime=Дата создания

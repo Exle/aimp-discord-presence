@@ -1,0 +1,10 @@
+﻿[Common]
+Demo.ExplorerView.GroupingPreset.Default=Default
+
+[ExplorerView]
+Caption=Explorer View (Demo)
+NoData=No data to display.\nCheck the filter.
+
+[AIMPML]
+FileAccessTime=Modification Date
+FileCreationTime=Creation Date

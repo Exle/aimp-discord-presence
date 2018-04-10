@@ -1,0 +1,58 @@
+[Common]
+ru.aimp.guidemo.addcustom=Добавить...
+ru.aimp.guidemo.addfolders=Добавить папки...
+ru.aimp.guidemo.addfiles=Добавить файлы...
+
+[InputBox]
+Caption=Добавление пользовательского значения
+L1=Имя:
+L2=Родительская папка:
+L3=Заметки:
+
+[DemoForm]
+Caption=Локализированный заголовок
+B1=Закрыть
+tsEditors=Редакторы
+tsGroups=Группы
+tsGraphics=Графические объекты
+tsIndicators=Индикаторы
+tsBBC=BBCode Box
+tsTreeList=Древовидная таблица
+btnAdd=Добавить
+catMain=Главная категория
+gbSimple=Обычная группа
+cbItem1=Флажок #1
+cbItem2=Флажок #2
+cbSkipMouseEvents=Игнорировать мышиные события
+gbChecked=Группа с флажком
+vlWarning=Все хорошо
+vlWarning2=Произошла критическая ошибка!
+rbItem1=Радио кнопка #1
+rbItem2=Радио кнопка #2
+lbDescription=Здесь размещены простые графические элементы управления
+lbRAT=Текст справа
+lbCT=Текст по центру
+lbLAT=Текст слева
+lbWEB=Страничка AIMP
+
+[DemoForm.Log]
+c[0]=Отправитель
+c[1]=Действие
+
+[DemoForm.edText]
+th=Поле ввода с встроенной кнопкой
+b[0]=Текст
+
+[DemoForm.cbbSimple]
+i[0]=Пункт 1
+i[1]=Пункт 2
+i[2]=Пункт 3
+
+[DemoForm.tlPaths]
+c[0]=Имя
+c[1]=Родительская папка
+c[2]=Заметки
+
+[GUIDemo.MSG]
+1=Подтверждение закрытия
+2=Вы точно хотите закрыть это окошко?
