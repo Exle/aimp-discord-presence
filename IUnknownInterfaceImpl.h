@@ -1,3 +1,5 @@
+/* https://github.com/AdrianEddy/AIMPYouTube/blob/master/IUnknownInterfaceImpl.h */
+
 template <typename T>
 class IUnknownInterfaceImpl : public T
 {
@@ -8,12 +10,15 @@ public:
 
 	virtual ~IUnknownInterfaceImpl() {}
 
-	virtual HRESULT WINAPI QueryInterface(REFIID riid, LPVOID* ppvObj) {
-		if (!ppvObj) {
+	virtual HRESULT WINAPI QueryInterface(REFIID riid, LPVOID* ppvObj)
+	{
+		if (!ppvObj)
+		{
 			return E_POINTER;
 		}
 
-		if (IID_IUnknown == riid) {
+		if (IID_IUnknown == riid)
+		{
 			*ppvObj = this;
 			AddRef();
 			return S_OK;
@@ -30,7 +35,8 @@ public:
 	virtual ULONG WINAPI Release(void) {
 		ULONG reference_count = --reference_count_;
 
-		if (reference_count == 0) {
+		if (reference_count == 0)
+		{
 			delete this;
 		}
 
@@ -38,6 +44,5 @@ public:
 	}
 
 private:
-
 	ULONG reference_count_;
 };

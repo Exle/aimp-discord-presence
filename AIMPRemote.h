@@ -72,8 +72,6 @@ private:
 	BOOL InfoUpdateVersionInfo();
 	BOOL InfoUpdateTrackInfo();
 
-	static VOID ThreadStart(PVOID);
-
 	HWND FAIMPRemoteHandle;
 	HWND MyWnd;
 

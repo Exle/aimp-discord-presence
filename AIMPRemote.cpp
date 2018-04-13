@@ -1,6 +1,5 @@
 #include <cmath>
 #include "AIMPRemote.h"
-#include <process.h>
 
 AIMPRemote *AIMPRemote::PAIMPRemote;
 
@@ -22,10 +21,10 @@ AIMPRemote::~AIMPRemote()
 	if (MyWnd != NULL)
 	{
 		DestroyWindow(MyWnd);
-		MyWnd = NULL;
 	}
 
-	delete PAIMPRemote;
+	delete FAIMPRemoteHandle;
+	delete MyWnd;
 }
 
 VOID AIMPRemote::AIMPExecuteCommand(INT ACommand)
@@ -63,65 +62,49 @@ VOID AIMPRemote::AIMPSetEvents(AIMPEvents *Events)
 
 BOOL AIMPRemote::AIMPSetRemoteHandle(const HWND Value)
 {
-	if (PAIMPRemote->FAIMPRemoteHandle != Value)
+	if (PAIMPRemote->FAIMPRemoteHandle == Value)
 	{
-		if (PAIMPRemote->FAIMPRemoteHandle != NULL)
+		return true;
+	}
+
+	if (PAIMPRemote->FAIMPRemoteHandle)
+	{
+		SendMessage(PAIMPRemote->FAIMPRemoteHandle, WM_AIMP_COMMAND, AIMP_RA_CMD_UNREGISTER_NOTIFY, (LPARAM)PAIMPRemote->MyWnd);
+	}
+
+	if (!Value)
+	{
+		return true;
+	}
+
+	if (!PAIMPRemote->MyWnd)
+	{
+		WNDCLASSEX wx		= {};
+		wx.cbSize			= sizeof(WNDCLASSEX);
+		wx.lpfnWndProc		= WMAIMPNotify;
+		wx.hInstance		= GetModuleHandle(NULL);
+		wx.lpszClassName	= AIMPRemoteClassName;
+		if (RegisterClassEx(&wx))
 		{
-			SendMessage(PAIMPRemote->FAIMPRemoteHandle, WM_AIMP_COMMAND, AIMP_RA_CMD_UNREGISTER_NOTIFY, (LPARAM)PAIMPRemote->MyWnd);
-			PAIMPRemote->FAIMPRemoteHandle = NULL;
-		}
-
-		if (Value != NULL)
-		{
-			if (PAIMPRemote->MyWnd == NULL)
-			{
-				WNDCLASSEX wx		= {};
-				wx.cbSize			= sizeof(WNDCLASSEX);
-				wx.lpfnWndProc		= WMAIMPNotify;
-				wx.hInstance		= GetModuleHandle(NULL);
-				wx.lpszClassName	= AIMPRemoteClassName;
-				if (RegisterClassEx(&wx))
-				{
-					PAIMPRemote->MyWnd = CreateWindowEx(WS_EX_CLIENTEDGE, AIMPRemoteClassName, AIMPRemoteClassName, NULL, NULL, NULL, NULL, NULL, HWND_MESSAGE, NULL, NULL, NULL);
-				}
-			}
-
-			if (PAIMPRemote->MyWnd == NULL)
-			{
-				return false;
-			}
-
-			PAIMPRemote->FAIMPRemoteHandle = Value;
-
-			PAIMPRemote->InfoUpdateVersionInfo();
-			PAIMPRemote->InfoUpdatePlayerState();
-			PAIMPRemote->InfoUpdateTrackInfo();
-			PAIMPRemote->InfoUpdateTrackPositionInfo();
-
-			SendMessage(PAIMPRemote->FAIMPRemoteHandle, WM_AIMP_COMMAND, AIMP_RA_CMD_REGISTER_NOTIFY, (LPARAM)PAIMPRemote->MyWnd);
-
-			_beginthread(ThreadStart, 0, NULL);
+			PAIMPRemote->MyWnd = CreateWindowExW(WS_EX_CLIENTEDGE, AIMPRemoteClassName, AIMPRemoteClassName, NULL, NULL, NULL, NULL, NULL, HWND_MESSAGE, NULL, NULL, NULL);
 		}
 	}
+
+	PAIMPRemote->FAIMPRemoteHandle = Value;
+
+	PAIMPRemote->InfoUpdateVersionInfo();
+	PAIMPRemote->InfoUpdatePlayerState();
+	PAIMPRemote->InfoUpdateTrackInfo();
+	PAIMPRemote->InfoUpdateTrackPositionInfo();
+
+	if (!PAIMPRemote->MyWnd)
+	{
+		return false;
+	}
+
+	SendMessage(PAIMPRemote->FAIMPRemoteHandle, WM_AIMP_COMMAND, AIMP_RA_CMD_REGISTER_NOTIFY, (LPARAM)PAIMPRemote->MyWnd);
 
 	return true;
-}
-
-VOID AIMPRemote::ThreadStart(PVOID)
-{
-	MSG msg;
-	do
-	{
-		while (PeekMessage(&msg, 0, 0, 0, PM_REMOVE))
-		{
-			TranslateMessage(&msg);
-			DispatchMessage(&msg);
-			Sleep(1000L);
-		}
-	}
-	while (WaitForSingleObject(NULL, 75L) == WAIT_TIMEOUT);
-
-	_endthread();
 }
 
 BOOL AIMPRemote::InfoUpdateTrackInfo()
@@ -132,13 +115,13 @@ BOOL AIMPRemote::InfoUpdateTrackInfo()
 	WCHAR buffer[256];
 
 	hFile = OpenFileMappingA(FILE_MAP_READ, true, AIMPRemoteAccessClass);
-	if (hFile == NULL)
+	if (!hFile)
 	{
 		return false;
 	}
 
 	AIMPRemote_TrackInfo = (PAIMPRemoteFileInfo)MapViewOfFile(hFile, FILE_MAP_READ, NULL, NULL, AIMPRemoteAccessMapFileSize);
-	if (AIMPRemote_TrackInfo == NULL)
+	if (!AIMPRemote_TrackInfo)
 	{
 		CloseHandle(hFile);
 		return false;

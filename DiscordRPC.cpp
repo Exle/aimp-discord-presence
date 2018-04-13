@@ -8,6 +8,7 @@ DiscordRPC::DiscordRPC()
 
 DiscordRPC::~DiscordRPC()
 {
+	ClearPresence();
 	Shutdown();
 }
 
