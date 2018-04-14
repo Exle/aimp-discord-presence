@@ -7,11 +7,12 @@ public:
 	DiscordRPC();
 	~DiscordRPC();
 
-	VOID Initialise(const char *AppId);
+	VOID Initialise(const char *AppId, DiscordEventHandlers *handlers);
 	BOOL Update(DiscordRichPresence *richPresence);
 	VOID UpdateRP(DiscordRichPresence *richPresence);
 	BOOL FastUpdate();
 	VOID ClearPresence();
+	VOID RunCallbacks();
 private:
 	VOID Shutdown();
 

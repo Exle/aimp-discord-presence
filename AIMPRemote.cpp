@@ -249,6 +249,11 @@ BOOL AIMPRemote::InfoUpdateVersionInfo()
 	return false;
 }
 
+AIMPTrackInfo AIMPRemote::AIMPGetTrackInfo()
+{
+	return PAIMPRemote->ARTrackInfo;
+}
+
 LRESULT CALLBACK AIMPRemote::WMAIMPNotify(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	if (wParam == AIMP_RA_NOTIFY_TRACK_INFO)

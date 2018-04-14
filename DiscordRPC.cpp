@@ -11,11 +11,11 @@ DiscordRPC::~DiscordRPC()
 	Shutdown();
 }
 
-VOID DiscordRPC::Initialise(const char *AppId)
+VOID DiscordRPC::Initialise(const char *AppId, DiscordEventHandlers *handlers)
 {
 	if (b_init == false)
 	{
-		Discord_Initialize(AppId, {}, 1, NULL);
+		Discord_Initialize(AppId, handlers, 1, NULL);
 		b_init = true;
 	}
 }
@@ -89,4 +89,9 @@ VOID DiscordRPC::UpdateRP(DiscordRichPresence *richPresence)
 VOID DiscordRPC::ClearPresence()
 {
 	Discord_ClearPresence();
+}
+
+VOID DiscordRPC::RunCallbacks()
+{
+	Discord_RunCallbacks();
 }
