@@ -63,7 +63,7 @@ public:
 	static INT AIMPGetPropertyValue(INT APropertyID);
 	static BOOL AIMPSetPropertyValue(INT APropertyID, INT AValue);
 	static VOID AIMPSetEvents(AIMPEvents *Events);
-	static BOOL AIMPSetRemoteHandle(const HWND Value);
+	static BOOL AIMPSetRemoteHandle(const HWND *Value);
 protected:
 	static LRESULT CALLBACK WMAIMPNotify(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 private:

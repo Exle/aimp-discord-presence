@@ -1,11 +1,10 @@
-#include <cmath>
 #include "AIMPRemote.h"
 
 AIMPRemote *AIMPRemote::PAIMPRemote;
 
 AIMPRemote::AIMPRemote()
 	: FAIMPRemoteHandle(NULL),
-	MyWnd(NULL)
+	  MyWnd(NULL)
 {
 	PAIMPRemote = this;
 	ARTrackInfo = { 0 };
@@ -16,15 +15,15 @@ AIMPRemote::AIMPRemote()
 
 AIMPRemote::~AIMPRemote()
 {
-	AIMPSetRemoteHandle(NULL);
+	if (FAIMPRemoteHandle)
+	{
+		DestroyWindow(FAIMPRemoteHandle);
+	}
 
-	if (MyWnd != NULL)
+	if (MyWnd)
 	{
 		DestroyWindow(MyWnd);
 	}
-
-	delete FAIMPRemoteHandle;
-	delete MyWnd;
 }
 
 VOID AIMPRemote::AIMPExecuteCommand(INT ACommand)
@@ -60,14 +59,14 @@ VOID AIMPRemote::AIMPSetEvents(AIMPEvents *Events)
 	PAIMPRemote->AREvents = *Events;
 }
 
-BOOL AIMPRemote::AIMPSetRemoteHandle(const HWND Value)
+BOOL AIMPRemote::AIMPSetRemoteHandle(const HWND *Value)
 {
-	if (PAIMPRemote->FAIMPRemoteHandle == Value)
+	if (PAIMPRemote->FAIMPRemoteHandle == *Value)
 	{
 		return true;
 	}
 
-	if (PAIMPRemote->FAIMPRemoteHandle)
+	if (PAIMPRemote->FAIMPRemoteHandle && PAIMPRemote->MyWnd)
 	{
 		SendMessage(PAIMPRemote->FAIMPRemoteHandle, WM_AIMP_COMMAND, AIMP_RA_CMD_UNREGISTER_NOTIFY, (LPARAM)PAIMPRemote->MyWnd);
 	}
@@ -90,7 +89,7 @@ BOOL AIMPRemote::AIMPSetRemoteHandle(const HWND Value)
 		}
 	}
 
-	PAIMPRemote->FAIMPRemoteHandle = Value;
+	PAIMPRemote->FAIMPRemoteHandle = *Value;
 
 	PAIMPRemote->InfoUpdateVersionInfo();
 	PAIMPRemote->InfoUpdatePlayerState();
@@ -109,6 +108,11 @@ BOOL AIMPRemote::AIMPSetRemoteHandle(const HWND Value)
 
 BOOL AIMPRemote::InfoUpdateTrackInfo()
 {
+	if (!AREvents.TrackInfo)
+	{
+		return true;
+	}
+
 	HANDLE hFile;
 	PAIMPRemoteFileInfo AIMPRemote_TrackInfo;
 	LPWSTR offset;
@@ -175,16 +179,18 @@ BOOL AIMPRemote::InfoUpdateTrackInfo()
 	UnmapViewOfFile(AIMPRemote_TrackInfo);
 	CloseHandle(hFile);
 
-	if (AREvents.TrackInfo != NULL)
-	{
-		AREvents.TrackInfo(&ARTrackInfo);
-	}
+	AREvents.TrackInfo(&ARTrackInfo);
 
 	return true;
 }
 
 BOOL AIMPRemote::InfoUpdatePlayerState()
 {
+	if (!AREvents.State)
+	{
+		return true;
+	}
+
 	int AIMPRemote_State = AIMPGetPropertyValue(AIMP_RA_PROPERTY_PLAYER_STATE);
 	if (ARState == AIMPRemote_State)
 	{
@@ -193,21 +199,23 @@ BOOL AIMPRemote::InfoUpdatePlayerState()
 
 	ARState = AIMPRemote_State;
 
-	if (AREvents.State != NULL)
-	{
-		AREvents.State(ARState);
-	}
+	AREvents.State(ARState);
 
 	return true;
 }
 
 BOOL AIMPRemote::InfoUpdateTrackPositionInfo()
 {
-	int AIMPRemote_PositionDur = (int)round(AIMPGetPropertyValue(AIMP_RA_PROPERTY_PLAYER_DURATION) / 1000);
-	int AIMPRemote_PositionPos = (int)round(AIMPGetPropertyValue(AIMP_RA_PROPERTY_PLAYER_POSITION) / 1000);
+	if (!AREvents.TrackPosition)
+	{
+		return true;
+	}
+
+	int AIMPRemote_PositionDur = AIMPGetPropertyValue(AIMP_RA_PROPERTY_PLAYER_DURATION) / 1000;
+	int AIMPRemote_PositionPos = AIMPGetPropertyValue(AIMP_RA_PROPERTY_PLAYER_POSITION) / 1000;
 
 	if (ARPosition.Duration == AIMPRemote_PositionDur
-		&& ARPosition.Position == AIMPRemote_PositionPos)
+	&&	ARPosition.Position == AIMPRemote_PositionPos)
 	{
 		return false;
 	}
@@ -215,26 +223,25 @@ BOOL AIMPRemote::InfoUpdateTrackPositionInfo()
 	ARPosition.Duration = AIMPRemote_PositionDur;
 	ARPosition.Position = AIMPRemote_PositionPos;
 
-	if (AREvents.TrackPosition != NULL)
-	{
-		AREvents.TrackPosition(&ARPosition);
-	}
+	AREvents.TrackPosition(&ARPosition);
 
 	return true;
 }
 
 BOOL AIMPRemote::InfoUpdateVersionInfo()
 {
+	if (!AREvents.Version)
+	{
+		return true;
+	}
+
 	int AIMPRemote_Version = AIMPGetPropertyValue(AIMP_RA_PROPERTY_VERSION);
 	if (AIMPRemote_Version != 0)
 	{
 		ARVersion.Version = static_cast<float>(HIWORD(AIMPRemote_Version)) / 100;
 		ARVersion.Build = LOWORD(AIMPRemote_Version);
 
-		if (AREvents.Version != NULL)
-		{
-			AREvents.Version(&ARVersion);
-		}
+		AREvents.Version(&ARVersion);
 
 		return true;
 	}
