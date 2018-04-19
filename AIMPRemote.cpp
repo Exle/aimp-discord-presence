@@ -68,7 +68,7 @@ BOOL AIMPRemote::AIMPSetRemoteHandle(const HWND *Value)
 
 	if (PAIMPRemote->FAIMPRemoteHandle && PAIMPRemote->MyWnd)
 	{
-		SendMessage(PAIMPRemote->FAIMPRemoteHandle, WM_AIMP_COMMAND, AIMP_RA_CMD_UNREGISTER_NOTIFY, (LPARAM)PAIMPRemote->MyWnd);
+		SendMessage(PAIMPRemote->FAIMPRemoteHandle, WM_AIMP_COMMAND, AIMP_RA_CMD_UNREGISTER_NOTIFY, reinterpret_cast<LPARAM>(PAIMPRemote->MyWnd));
 	}
 
 	if (!Value)
@@ -101,7 +101,7 @@ BOOL AIMPRemote::AIMPSetRemoteHandle(const HWND *Value)
 		return false;
 	}
 
-	SendMessage(PAIMPRemote->FAIMPRemoteHandle, WM_AIMP_COMMAND, AIMP_RA_CMD_REGISTER_NOTIFY, (LPARAM)PAIMPRemote->MyWnd);
+	SendMessage(PAIMPRemote->FAIMPRemoteHandle, WM_AIMP_COMMAND, AIMP_RA_CMD_REGISTER_NOTIFY, reinterpret_cast<LPARAM>(PAIMPRemote->MyWnd));
 
 	return true;
 }
@@ -124,57 +124,57 @@ BOOL AIMPRemote::InfoUpdateTrackInfo()
 		return false;
 	}
 
-	AIMPRemote_TrackInfo = (PAIMPRemoteFileInfo)MapViewOfFile(hFile, FILE_MAP_READ, NULL, NULL, AIMPRemoteAccessMapFileSize);
+	AIMPRemote_TrackInfo = static_cast<PAIMPRemoteFileInfo>(MapViewOfFile(hFile, FILE_MAP_READ, NULL, NULL, AIMPRemoteAccessMapFileSize));
 	if (!AIMPRemote_TrackInfo)
 	{
 		CloseHandle(hFile);
 		return false;
 	}
 
-	offset = (LPWSTR)((PBYTE)AIMPRemote_TrackInfo + AIMPRemote_TrackInfo->Deprecated1);
+	offset = reinterpret_cast<LPWSTR>(reinterpret_cast<PBYTE>(AIMPRemote_TrackInfo) + AIMPRemote_TrackInfo->Deprecated1);
 
-	ARTrackInfo = { 0 };
+	ARTrackInfo					= { 0 };
 
-	ARTrackInfo.Active = AIMPRemote_TrackInfo->Active;
+	ARTrackInfo.Active			= AIMPRemote_TrackInfo->Active;
 
-	ARTrackInfo.BitRate = AIMPRemote_TrackInfo->BitRate;
-	ARTrackInfo.Channels = AIMPRemote_TrackInfo->Channels;
-	ARTrackInfo.Duration = AIMPRemote_TrackInfo->Duration;
-	ARTrackInfo.FileSize = AIMPRemote_TrackInfo->FileSize;
-	ARTrackInfo.FileMark = AIMPRemote_TrackInfo->FileMark;
-	ARTrackInfo.SampleRate = AIMPRemote_TrackInfo->SampleRate;
-	ARTrackInfo.TrackNumber = AIMPRemote_TrackInfo->TrackNumber;
+	ARTrackInfo.BitRate			= AIMPRemote_TrackInfo->BitRate;
+	ARTrackInfo.Channels		= AIMPRemote_TrackInfo->Channels;
+	ARTrackInfo.Duration		= AIMPRemote_TrackInfo->Duration;
+	ARTrackInfo.FileSize		= AIMPRemote_TrackInfo->FileSize;
+	ARTrackInfo.FileMark		= AIMPRemote_TrackInfo->FileMark;
+	ARTrackInfo.SampleRate		= AIMPRemote_TrackInfo->SampleRate;
+	ARTrackInfo.TrackNumber		= AIMPRemote_TrackInfo->TrackNumber;
 
-	ARTrackInfo.AlbumLength = AIMPRemote_TrackInfo->AlbumLength;
-	ARTrackInfo.ArtistLength = AIMPRemote_TrackInfo->ArtistLength;
-	ARTrackInfo.DateLength = AIMPRemote_TrackInfo->DateLength;
-	ARTrackInfo.FileNameLength = AIMPRemote_TrackInfo->FileNameLength;
-	ARTrackInfo.GenreLength = AIMPRemote_TrackInfo->GenreLength;
-	ARTrackInfo.TitleLength = AIMPRemote_TrackInfo->TitleLength;
+	ARTrackInfo.AlbumLength		= AIMPRemote_TrackInfo->AlbumLength;
+	ARTrackInfo.ArtistLength	= AIMPRemote_TrackInfo->ArtistLength;
+	ARTrackInfo.DateLength		= AIMPRemote_TrackInfo->DateLength;
+	ARTrackInfo.FileNameLength	= AIMPRemote_TrackInfo->FileNameLength;
+	ARTrackInfo.GenreLength		= AIMPRemote_TrackInfo->GenreLength;
+	ARTrackInfo.TitleLength		= AIMPRemote_TrackInfo->TitleLength;
 
 	memcpy(buffer, offset, AIMPRemote_TrackInfo->AlbumLength * 2);
 	buffer[AIMPRemote_TrackInfo->AlbumLength] = 0;
-	WideCharToMultiByte(CP_UTF8, NULL, buffer, -1, ARTrackInfo.Album, AIMPRemote_TrackInfo->AlbumLength * 2, NULL, NULL);
+	WideCharToMultiByte(CP_UTF8, NULL, buffer, -1, ARTrackInfo.Album,		sizeof(ARTrackInfo.Album), NULL, NULL);
 
 	memcpy(buffer, offset += AIMPRemote_TrackInfo->AlbumLength, AIMPRemote_TrackInfo->ArtistLength * 2);
 	buffer[AIMPRemote_TrackInfo->ArtistLength] = 0;
-	WideCharToMultiByte(CP_UTF8, NULL, buffer, -1, ARTrackInfo.Artist, AIMPRemote_TrackInfo->ArtistLength * 2, NULL, NULL);
+	WideCharToMultiByte(CP_UTF8, NULL, buffer, -1, ARTrackInfo.Artist,		sizeof(ARTrackInfo.Artist), NULL, NULL);
 
 	memcpy(buffer, offset += AIMPRemote_TrackInfo->ArtistLength, AIMPRemote_TrackInfo->DateLength * 2);
 	buffer[AIMPRemote_TrackInfo->DateLength] = 0;
-	WideCharToMultiByte(CP_UTF8, NULL, buffer, -1, ARTrackInfo.Date, AIMPRemote_TrackInfo->DateLength * 2, NULL, NULL);
+	WideCharToMultiByte(CP_UTF8, NULL, buffer, -1, ARTrackInfo.Date,		sizeof(ARTrackInfo.Date), NULL, NULL);
 
 	memcpy(buffer, offset += AIMPRemote_TrackInfo->DateLength, AIMPRemote_TrackInfo->FileNameLength * 2);
 	buffer[AIMPRemote_TrackInfo->FileNameLength] = 0;
-	WideCharToMultiByte(CP_UTF8, NULL, buffer, -1, ARTrackInfo.FileName, AIMPRemote_TrackInfo->FileNameLength * 2, NULL, NULL);
+	WideCharToMultiByte(CP_UTF8, NULL, buffer, -1, ARTrackInfo.FileName,	sizeof(ARTrackInfo.FileName), NULL, NULL);
 
 	memcpy(buffer, offset += AIMPRemote_TrackInfo->FileNameLength, AIMPRemote_TrackInfo->GenreLength * 2);
 	buffer[AIMPRemote_TrackInfo->GenreLength] = 0;
-	WideCharToMultiByte(CP_UTF8, NULL, buffer, -1, ARTrackInfo.Genre, AIMPRemote_TrackInfo->GenreLength * 2, NULL, NULL);
+	WideCharToMultiByte(CP_UTF8, NULL, buffer, -1, ARTrackInfo.Genre,		sizeof(ARTrackInfo.Genre), NULL, NULL);
 
 	memcpy(buffer, offset += AIMPRemote_TrackInfo->GenreLength, AIMPRemote_TrackInfo->TitleLength * 2);
 	buffer[AIMPRemote_TrackInfo->TitleLength] = 0;
-	WideCharToMultiByte(CP_UTF8, NULL, buffer, -1, ARTrackInfo.Title, AIMPRemote_TrackInfo->TitleLength * 2, NULL, NULL);
+	WideCharToMultiByte(CP_UTF8, NULL, buffer, -1, ARTrackInfo.Title,		sizeof(ARTrackInfo.Title), NULL, NULL);
 
 	UnmapViewOfFile(AIMPRemote_TrackInfo);
 	CloseHandle(hFile);
