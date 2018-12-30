@@ -33,22 +33,7 @@ BOOL DiscordRPC::Update(DiscordRichPresence *richPresence)
 {
 	if (b_init == true)
 	{
-		rich.state			= richPresence->state;
-		rich.details		= richPresence->details;
-		rich.startTimestamp	= richPresence->startTimestamp;
-		rich.endTimestamp	= richPresence->endTimestamp;
-		rich.largeImageKey	= richPresence->largeImageKey;
-		rich.largeImageText	= richPresence->largeImageText;
-		rich.smallImageKey	= richPresence->smallImageKey;
-		rich.smallImageText	= richPresence->smallImageText;
-		rich.partyId		= richPresence->partyId;
-		rich.partySize		= richPresence->partySize;
-		rich.partyMax		= richPresence->partyMax;
-		rich.matchSecret	= richPresence->matchSecret;
-		rich.joinSecret		= richPresence->joinSecret;
-		rich.spectateSecret	= richPresence->spectateSecret;
-		rich.instance		= richPresence->instance;
-
+		UpdateRP(richPresence);
 		Discord_UpdatePresence(&rich);
 		return true;
 	}
