@@ -160,27 +160,27 @@ BOOL AIMPRemote::InfoUpdateTrackInfo()
 	memcpy(buffer, offset += AIMPRemote_TrackInfo->AlbumLength, AIMPRemote_TrackInfo->ArtistLength * 2);
 	buffer[AIMPRemote_TrackInfo->ArtistLength] = 0;
 	WideCharToMultiByte(CP_UTF8, NULL, buffer, -1, ARTrackInfo.Artist,		sizeof(ARTrackInfo.Artist), NULL, NULL);
-	if(strlen(ARTrackInfo.Album)==1)strcat_s(ARTrackInfo.Artist, sizeof(ARTrackInfo.Artist), " ");
+	if(strlen(ARTrackInfo.Artist)==1)strcat_s(ARTrackInfo.Artist, sizeof(ARTrackInfo.Artist), " ");
 
 	memcpy(buffer, offset += AIMPRemote_TrackInfo->ArtistLength, AIMPRemote_TrackInfo->DateLength * 2);
 	buffer[AIMPRemote_TrackInfo->DateLength] = 0;
 	WideCharToMultiByte(CP_UTF8, NULL, buffer, -1, ARTrackInfo.Date,		sizeof(ARTrackInfo.Date), NULL, NULL);
-	if(strlen(ARTrackInfo.Album)==1)strcat_s(ARTrackInfo.Date, sizeof(ARTrackInfo.Date), " ");
+	if(strlen(ARTrackInfo.Date)==1)strcat_s(ARTrackInfo.Date, sizeof(ARTrackInfo.Date), " ");
 
 	memcpy(buffer, offset += AIMPRemote_TrackInfo->DateLength, AIMPRemote_TrackInfo->FileNameLength * 2);
 	buffer[AIMPRemote_TrackInfo->FileNameLength] = 0;
 	WideCharToMultiByte(CP_UTF8, NULL, buffer, -1, ARTrackInfo.FileName,	sizeof(ARTrackInfo.FileName), NULL, NULL);
-	if(strlen(ARTrackInfo.Album)==1)strcat_s(ARTrackInfo.FileName, sizeof(ARTrackInfo.FileName), " ");
+	if(strlen(ARTrackInfo.FileName)==1)strcat_s(ARTrackInfo.FileName, sizeof(ARTrackInfo.FileName), " ");
 
 	memcpy(buffer, offset += AIMPRemote_TrackInfo->FileNameLength, AIMPRemote_TrackInfo->GenreLength * 2);
 	buffer[AIMPRemote_TrackInfo->GenreLength] = 0;
 	WideCharToMultiByte(CP_UTF8, NULL, buffer, -1, ARTrackInfo.Genre,		sizeof(ARTrackInfo.Genre), NULL, NULL);
-	if(strlen(ARTrackInfo.Album)==1)strcat_s(ARTrackInfo.Genre, sizeof(ARTrackInfo.Genre), " ");
+	if(strlen(ARTrackInfo.Genre)==1)strcat_s(ARTrackInfo.Genre, sizeof(ARTrackInfo.Genre), " ");
 
 	memcpy(buffer, offset += AIMPRemote_TrackInfo->GenreLength, AIMPRemote_TrackInfo->TitleLength * 2);
 	buffer[AIMPRemote_TrackInfo->TitleLength] = 0;
 	WideCharToMultiByte(CP_UTF8, NULL, buffer, -1, ARTrackInfo.Title,		sizeof(ARTrackInfo.Title), NULL, NULL);
-	if(strlen(ARTrackInfo.Album)==1)strcat_s(ARTrackInfo.Title, sizeof(ARTrackInfo.Title), " ");
+	if(strlen(ARTrackInfo.Title)==1)strcat_s(ARTrackInfo.Title, sizeof(ARTrackInfo.Title), " ");
 
 	UnmapViewOfFile(AIMPRemote_TrackInfo);
 	CloseHandle(hFile);
