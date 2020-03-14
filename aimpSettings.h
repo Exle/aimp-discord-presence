@@ -1,0 +1,9 @@
+#pragma once
+
+#define DISCORD_APPID "429559336982020107"
+
+#define AIMPPLUGIN_NAME L"Discord Presence"
+#define AIMPPLUGIN_AUTHOR L"Exle"
+#define AIMPPLUGIN_SHORT_DESC L"Update your discord status with the rich presence"
+#define AIMPPLUGIN_FULL_DESC AIMPPLUGIN_SHORT_DESC
+#define AIMPPLUGIN_CATEGORY AIMP_PLUGIN_CATEGORY_ADDONS

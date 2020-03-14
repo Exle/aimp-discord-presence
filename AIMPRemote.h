@@ -1,3 +1,5 @@
+#pragma once
+
 #include <apiRemote.h>
 
 #define AIMPREMOTE_PLAYER_STATE_STOPPED		0
@@ -31,12 +33,12 @@ typedef struct AIMPTrackInfo
 	DWORD GenreLength;
 	DWORD TitleLength;
 
-	CHAR Album[256];
-	CHAR Artist[256];
-	CHAR Date[256];
-	CHAR FileName[256];
-	CHAR Genre[256];
-	CHAR Title[256];
+	PCHAR Album;
+	PCHAR Artist;
+	PCHAR Date;
+	PCHAR FileName;
+	PCHAR Genre;
+	PCHAR Title;
 } *PAIMPTrackInfo;
 
 typedef struct AIMPPosition
@@ -62,8 +64,8 @@ public:
 	static VOID AIMPExecuteCommand(INT ACommand);
 	static INT AIMPGetPropertyValue(INT APropertyID);
 	static BOOL AIMPSetPropertyValue(INT APropertyID, INT AValue);
-	static VOID AIMPSetEvents(AIMPEvents *Events);
-	static BOOL AIMPSetRemoteHandle(const HWND *Value);
+	static VOID AIMPSetEvents(AIMPEvents* Events);
+	static BOOL AIMPSetRemoteHandle(const HWND* Value);
 	static AIMPTrackInfo AIMPGetTrackInfo();
 protected:
 	static LRESULT CALLBACK WMAIMPNotify(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -76,10 +78,10 @@ private:
 	HWND FAIMPRemoteHandle;
 	HWND MyWnd;
 
-	static AIMPRemote *PAIMPRemote;
-	AIMPTrackInfo ARTrackInfo;
-	AIMPVersion ARVersion;
-	AIMPPosition ARPosition;
-	AIMPEvents AREvents;
-	int ARState;
+	static AIMPRemote* PAIMPRemote;
+	AIMPTrackInfo ARTrackInfo = { 0 };
+	AIMPVersion ARVersion = { 0 };
+	AIMPPosition ARPosition = { 0 };
+	AIMPEvents AREvents = { 0 };
+	INT ARState = AIMPREMOTE_PLAYER_STATE_STOPPED;
 };

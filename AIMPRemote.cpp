@@ -1,16 +1,20 @@
-#include "AIMPRemote.h"
+//#define _CRT_SECURE_NO_WARNINGS
+#include "aimpRemote.h"
+//#include <malloc.h>
+#include <wchar.h>
 
-AIMPRemote *AIMPRemote::PAIMPRemote;
+AIMPRemote* AIMPRemote::PAIMPRemote;
 
 AIMPRemote::AIMPRemote()
 	: FAIMPRemoteHandle(NULL),
-	  MyWnd(NULL)
+	MyWnd(NULL)
 {
 	PAIMPRemote = this;
-	ARTrackInfo = { 0 };
-	ARVersion = { 0 };
-	ARPosition = { 0 };
-	AREvents = { 0 };
+	ARState = AIMPREMOTE_PLAYER_STATE_STOPPED;
+	//ARTrackInfo = { 0 };
+	//ARVersion = { 0 };
+	//ARPosition = { 0 };
+	//AREvents = { 0 };
 }
 
 AIMPRemote::~AIMPRemote()
@@ -26,40 +30,40 @@ AIMPRemote::~AIMPRemote()
 	}
 }
 
-VOID AIMPRemote::AIMPExecuteCommand(INT ACommand)
+VOID AIMPRemote::AIMPExecuteCommand(INT Command)
 {
 	if (PAIMPRemote->FAIMPRemoteHandle != NULL)
 	{
-		SendMessage(PAIMPRemote->FAIMPRemoteHandle, WM_AIMP_COMMAND, ACommand, 0);
+		SendMessage(PAIMPRemote->FAIMPRemoteHandle, WM_AIMP_COMMAND, Command, 0);
 	}
 }
 
-INT AIMPRemote::AIMPGetPropertyValue(INT APropertyID)
+INT AIMPRemote::AIMPGetPropertyValue(INT PropertyID)
 {
 	if (PAIMPRemote->FAIMPRemoteHandle != NULL)
 	{
-		return SendMessage(PAIMPRemote->FAIMPRemoteHandle, WM_AIMP_PROPERTY, APropertyID | AIMP_RA_PROPVALUE_GET, 0);
+		return SendMessage(PAIMPRemote->FAIMPRemoteHandle, WM_AIMP_PROPERTY, PropertyID | AIMP_RA_PROPVALUE_GET, 0);
 	}
 
 	return 0;
 }
 
-BOOL AIMPRemote::AIMPSetPropertyValue(INT APropertyID, INT AValue)
+BOOL AIMPRemote::AIMPSetPropertyValue(INT PropertyID, INT AValue)
 {
 	if (PAIMPRemote->FAIMPRemoteHandle != NULL)
 	{
-		return SendMessage(PAIMPRemote->FAIMPRemoteHandle, WM_AIMP_PROPERTY, APropertyID | AIMP_RA_PROPVALUE_SET, AValue);
+		return SendMessage(PAIMPRemote->FAIMPRemoteHandle, WM_AIMP_PROPERTY, PropertyID | AIMP_RA_PROPVALUE_SET, AValue);
 	}
 
 	return false;
 }
 
-VOID AIMPRemote::AIMPSetEvents(AIMPEvents *Events)
+VOID AIMPRemote::AIMPSetEvents(AIMPEvents* Events)
 {
 	PAIMPRemote->AREvents = *Events;
 }
 
-BOOL AIMPRemote::AIMPSetRemoteHandle(const HWND *Value)
+BOOL AIMPRemote::AIMPSetRemoteHandle(const HWND* Value)
 {
 	if (PAIMPRemote->FAIMPRemoteHandle == *Value)
 	{
@@ -78,11 +82,11 @@ BOOL AIMPRemote::AIMPSetRemoteHandle(const HWND *Value)
 
 	if (!PAIMPRemote->MyWnd)
 	{
-		WNDCLASSEX wx		= {};
-		wx.cbSize			= sizeof(WNDCLASSEX);
-		wx.lpfnWndProc		= WMAIMPNotify;
-		wx.hInstance		= GetModuleHandle(NULL);
-		wx.lpszClassName	= AIMPRemoteClassName;
+		WNDCLASSEX wx = {};
+		wx.cbSize = sizeof(WNDCLASSEX);
+		wx.lpfnWndProc = WMAIMPNotify;
+		wx.hInstance = GetModuleHandle(NULL);
+		wx.lpszClassName = AIMPRemoteClassName;
 		if (RegisterClassEx(&wx))
 		{
 			PAIMPRemote->MyWnd = CreateWindowExW(WS_EX_CLIENTEDGE, AIMPRemoteClassName, AIMPRemoteClassName, NULL, NULL, NULL, NULL, NULL, HWND_MESSAGE, NULL, NULL, NULL);
@@ -116,7 +120,6 @@ BOOL AIMPRemote::InfoUpdateTrackInfo()
 	HANDLE hFile;
 	PAIMPRemoteFileInfo AIMPRemote_TrackInfo;
 	LPWSTR offset;
-	WCHAR buffer[256];
 
 	hFile = OpenFileMappingA(FILE_MAP_READ, true, AIMPRemoteAccessClass);
 	if (!hFile)
@@ -133,54 +136,64 @@ BOOL AIMPRemote::InfoUpdateTrackInfo()
 
 	offset = reinterpret_cast<LPWSTR>(reinterpret_cast<PBYTE>(AIMPRemote_TrackInfo) + AIMPRemote_TrackInfo->Deprecated1);
 
-	ARTrackInfo					= { 0 };
+	ARTrackInfo = { 0 };
 
-	ARTrackInfo.Active			= AIMPRemote_TrackInfo->Active;
+	ARTrackInfo.Active = AIMPRemote_TrackInfo->Active;
 
-	ARTrackInfo.BitRate			= AIMPRemote_TrackInfo->BitRate;
-	ARTrackInfo.Channels		= AIMPRemote_TrackInfo->Channels;
-	ARTrackInfo.Duration		= AIMPRemote_TrackInfo->Duration;
-	ARTrackInfo.FileSize		= AIMPRemote_TrackInfo->FileSize;
-	ARTrackInfo.FileMark		= AIMPRemote_TrackInfo->FileMark;
-	ARTrackInfo.SampleRate		= AIMPRemote_TrackInfo->SampleRate;
-	ARTrackInfo.TrackNumber		= AIMPRemote_TrackInfo->TrackNumber;
+	ARTrackInfo.BitRate = AIMPRemote_TrackInfo->BitRate;
+	ARTrackInfo.Channels = AIMPRemote_TrackInfo->Channels;
+	ARTrackInfo.Duration = AIMPRemote_TrackInfo->Duration;
+	ARTrackInfo.FileSize = AIMPRemote_TrackInfo->FileSize;
+	ARTrackInfo.FileMark = AIMPRemote_TrackInfo->FileMark;
+	ARTrackInfo.SampleRate = AIMPRemote_TrackInfo->SampleRate;
+	ARTrackInfo.TrackNumber = AIMPRemote_TrackInfo->TrackNumber;
 
-	ARTrackInfo.AlbumLength		= AIMPRemote_TrackInfo->AlbumLength;
-	ARTrackInfo.ArtistLength	= AIMPRemote_TrackInfo->ArtistLength;
-	ARTrackInfo.DateLength		= AIMPRemote_TrackInfo->DateLength;
-	ARTrackInfo.FileNameLength	= AIMPRemote_TrackInfo->FileNameLength;
-	ARTrackInfo.GenreLength		= AIMPRemote_TrackInfo->GenreLength;
-	ARTrackInfo.TitleLength		= AIMPRemote_TrackInfo->TitleLength;
+	ARTrackInfo.AlbumLength = AIMPRemote_TrackInfo->AlbumLength;
+	ARTrackInfo.ArtistLength = AIMPRemote_TrackInfo->ArtistLength;
+	ARTrackInfo.DateLength = AIMPRemote_TrackInfo->DateLength;
+	ARTrackInfo.FileNameLength = AIMPRemote_TrackInfo->FileNameLength;
+	ARTrackInfo.GenreLength = AIMPRemote_TrackInfo->GenreLength;
+	ARTrackInfo.TitleLength = AIMPRemote_TrackInfo->TitleLength;
 
-	memcpy(buffer, offset, AIMPRemote_TrackInfo->AlbumLength * 2);
-	buffer[AIMPRemote_TrackInfo->AlbumLength] = 0;
-	WideCharToMultiByte(CP_UTF8, NULL, buffer, -1, ARTrackInfo.Album,		sizeof(ARTrackInfo.Album), NULL, NULL);
-	if(strlen(ARTrackInfo.Album)==1)strcat_s(ARTrackInfo.Album, sizeof(ARTrackInfo.Album), " ");
+	PWCHAR buffer;
 
-	memcpy(buffer, offset += AIMPRemote_TrackInfo->AlbumLength, AIMPRemote_TrackInfo->ArtistLength * 2);
-	buffer[AIMPRemote_TrackInfo->ArtistLength] = 0;
-	WideCharToMultiByte(CP_UTF8, NULL, buffer, -1, ARTrackInfo.Artist,		sizeof(ARTrackInfo.Artist), NULL, NULL);
-	if(strlen(ARTrackInfo.Artist)==1)strcat_s(ARTrackInfo.Artist, sizeof(ARTrackInfo.Artist), " ");
+	ARTrackInfo.Album = new char[AIMPRemote_TrackInfo->AlbumLength * 2];
+	ARTrackInfo.Artist = new char[AIMPRemote_TrackInfo->ArtistLength * 2];
+	ARTrackInfo.Date = new char[AIMPRemote_TrackInfo->DateLength * 2];
+	ARTrackInfo.FileName = new char[AIMPRemote_TrackInfo->FileNameLength * 2];
+	ARTrackInfo.Genre = new char[AIMPRemote_TrackInfo->GenreLength * 2];
+	ARTrackInfo.Title = new char[AIMPRemote_TrackInfo->TitleLength * 2];
 
-	memcpy(buffer, offset += AIMPRemote_TrackInfo->ArtistLength, AIMPRemote_TrackInfo->DateLength * 2);
-	buffer[AIMPRemote_TrackInfo->DateLength] = 0;
-	WideCharToMultiByte(CP_UTF8, NULL, buffer, -1, ARTrackInfo.Date,		sizeof(ARTrackInfo.Date), NULL, NULL);
-	if(strlen(ARTrackInfo.Date)==1)strcat_s(ARTrackInfo.Date, sizeof(ARTrackInfo.Date), " ");
+	buffer = new WCHAR[AIMPRemote_TrackInfo->AlbumLength * 2];
+	wmemcpy(buffer, offset, AIMPRemote_TrackInfo->AlbumLength * 2);
+	WideCharToMultiByte(CP_UTF8, 0, buffer, -1, ARTrackInfo.Album, AIMPRemote_TrackInfo->AlbumLength, NULL, NULL);
 
-	memcpy(buffer, offset += AIMPRemote_TrackInfo->DateLength, AIMPRemote_TrackInfo->FileNameLength * 2);
-	buffer[AIMPRemote_TrackInfo->FileNameLength] = 0;
-	WideCharToMultiByte(CP_UTF8, NULL, buffer, -1, ARTrackInfo.FileName,	sizeof(ARTrackInfo.FileName), NULL, NULL);
-	if(strlen(ARTrackInfo.FileName)==1)strcat_s(ARTrackInfo.FileName, sizeof(ARTrackInfo.FileName), " ");
+	buffer = new WCHAR[AIMPRemote_TrackInfo->ArtistLength * 2];
+	wmemcpy(buffer, offset += AIMPRemote_TrackInfo->AlbumLength, AIMPRemote_TrackInfo->ArtistLength * 2);
+	WideCharToMultiByte(CP_UTF8, 0, buffer, -1, ARTrackInfo.Artist, AIMPRemote_TrackInfo->ArtistLength, NULL, NULL);
 
-	memcpy(buffer, offset += AIMPRemote_TrackInfo->FileNameLength, AIMPRemote_TrackInfo->GenreLength * 2);
-	buffer[AIMPRemote_TrackInfo->GenreLength] = 0;
-	WideCharToMultiByte(CP_UTF8, NULL, buffer, -1, ARTrackInfo.Genre,		sizeof(ARTrackInfo.Genre), NULL, NULL);
-	if(strlen(ARTrackInfo.Genre)==1)strcat_s(ARTrackInfo.Genre, sizeof(ARTrackInfo.Genre), " ");
+	buffer = new WCHAR[AIMPRemote_TrackInfo->DateLength * 2];
+	wmemcpy(buffer, offset += AIMPRemote_TrackInfo->ArtistLength, AIMPRemote_TrackInfo->DateLength * 2);
+	WideCharToMultiByte(CP_UTF8, 0, buffer, -1, ARTrackInfo.Date, AIMPRemote_TrackInfo->DateLength, NULL, NULL);
 
-	memcpy(buffer, offset += AIMPRemote_TrackInfo->GenreLength, AIMPRemote_TrackInfo->TitleLength * 2);
-	buffer[AIMPRemote_TrackInfo->TitleLength] = 0;
-	WideCharToMultiByte(CP_UTF8, NULL, buffer, -1, ARTrackInfo.Title,		sizeof(ARTrackInfo.Title), NULL, NULL);
-	if(strlen(ARTrackInfo.Title)==1)strcat_s(ARTrackInfo.Title, sizeof(ARTrackInfo.Title), " ");
+	buffer = new WCHAR[AIMPRemote_TrackInfo->FileNameLength * 2];
+	wmemcpy(buffer, offset += AIMPRemote_TrackInfo->DateLength, AIMPRemote_TrackInfo->FileNameLength * 2);
+	WideCharToMultiByte(CP_UTF8, 0, buffer, -1, ARTrackInfo.FileName, AIMPRemote_TrackInfo->FileNameLength, NULL, NULL);
+
+	buffer = new WCHAR[AIMPRemote_TrackInfo->GenreLength * 2];
+	wmemcpy(buffer, offset += AIMPRemote_TrackInfo->FileNameLength, AIMPRemote_TrackInfo->GenreLength * 2);
+	WideCharToMultiByte(CP_UTF8, 0, buffer, -1, ARTrackInfo.Genre, AIMPRemote_TrackInfo->GenreLength, NULL, NULL);
+
+	buffer = new WCHAR[AIMPRemote_TrackInfo->TitleLength * 2];
+	wmemcpy(buffer, offset += AIMPRemote_TrackInfo->GenreLength, AIMPRemote_TrackInfo->TitleLength * 2);
+	WideCharToMultiByte(CP_UTF8, 0, buffer, -1, ARTrackInfo.Title, AIMPRemote_TrackInfo->TitleLength, NULL, NULL);
+
+	ARTrackInfo.Album[AIMPRemote_TrackInfo->AlbumLength] =
+		ARTrackInfo.Artist[AIMPRemote_TrackInfo->ArtistLength] =
+		ARTrackInfo.Date[AIMPRemote_TrackInfo->DateLength] =
+		ARTrackInfo.FileName[AIMPRemote_TrackInfo->FileNameLength] =
+		ARTrackInfo.Genre[AIMPRemote_TrackInfo->GenreLength] =
+		ARTrackInfo.Title[AIMPRemote_TrackInfo->TitleLength] = 0;
 
 	UnmapViewOfFile(AIMPRemote_TrackInfo);
 	CloseHandle(hFile);
@@ -197,7 +210,7 @@ BOOL AIMPRemote::InfoUpdatePlayerState()
 		return true;
 	}
 
-	int AIMPRemote_State = AIMPGetPropertyValue(AIMP_RA_PROPERTY_PLAYER_STATE);
+	INT AIMPRemote_State = AIMPGetPropertyValue(AIMP_RA_PROPERTY_PLAYER_STATE);
 	if (ARState == AIMPRemote_State)
 	{
 		return false;
@@ -221,7 +234,7 @@ BOOL AIMPRemote::InfoUpdateTrackPositionInfo()
 	int AIMPRemote_PositionPos = AIMPGetPropertyValue(AIMP_RA_PROPERTY_PLAYER_POSITION) / 1000;
 
 	if (ARPosition.Duration == AIMPRemote_PositionDur
-	&&	ARPosition.Position == AIMPRemote_PositionPos)
+		&& ARPosition.Position == AIMPRemote_PositionPos)
 	{
 		return false;
 	}

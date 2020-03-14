@@ -1,97 +1,53 @@
-#include "AIMPRemote.h"
-#include "AIMPPlugin.h"
-#include "DiscordRPC.h"
+﻿#define _CRT_SECURE_NO_WARNINGS
+
+#include "aimpPlugin.h"
 #include <time.h>
 
-CONST CHAR *AppId			= "429559336982020107";
-CONST WCHAR *InfoName		= L"Discord Presence";
-CONST WCHAR *InfoAuthor		= L"Exle";
-CONST WCHAR *InfoShortDesc	= L"Update your discord status with the rich presence";
+AIMPRemote* aimpRemote;
+DiscordRichPresence discordPresence;
 
-AIMPRemote *aimpRemote;
-DiscordRPC *discord;
-DiscordRichPresence discord_rpc;
-
-AIMPPlugin::AIMPPlugin()
-	: bFinalised(true)
+HRESULT __declspec(dllexport) WINAPI AIMPPluginGetHeader(IAIMPPlugin** Header)
 {
-	AddRef();
-}
-
-AIMPPlugin::~AIMPPlugin()
-{
-	Finalize();
-}
-
-HRESULT __declspec(dllexport) WINAPI AIMPPluginGetHeader(IAIMPPlugin **Header)
-{
-	*Header = new AIMPPlugin();
+	*Header = new Plugin();
 	return S_OK;
 }
 
-PWCHAR WINAPI AIMPPlugin::InfoGet(INT Index)
+HRESULT WINAPI Plugin::Initialize(IAIMPCore* Core)
 {
-	switch (Index)
-	{
-		case AIMP_PLUGIN_INFO_NAME:					return const_cast<PWCHAR>(InfoName);
-		case AIMP_PLUGIN_INFO_AUTHOR:				return const_cast<PWCHAR>(InfoAuthor);
-		case AIMP_PLUGIN_INFO_SHORT_DESCRIPTION:	return const_cast<PWCHAR>(InfoShortDesc);
-	}
-
-	return nullptr;
-}
-
-DWORD WINAPI AIMPPlugin::InfoGetCategories()
-{
-	return AIMP_PLUGIN_CATEGORY_ADDONS;
-}
-
-HRESULT WINAPI AIMPPlugin::Initialize(IAIMPCore* Core)
-{
-	if (!bFinalised)
-	{
-		return E_ABORT;
-	}
-
 	HWND AIMPRemoteHandle = FindWindowA(AIMPRemoteAccessClass, AIMPRemoteAccessClass);
 	if (AIMPRemoteHandle == NULL)
 	{
 		return E_ABORT;
 	}
 
-	aimpRemote	= new AIMPRemote();
-	discord		= new DiscordRPC();
+	aimpRemote = new AIMPRemote();
 
 	DiscordEventHandlers handlers = { 0 };
-	handlers.ready = DiscordReady;
+	handlers.ready = this->DiscordReady;
 
-	discord->Initialise(AppId, &handlers);
+	Discord_Initialize(DISCORD_APPID, &handlers, 1, NULL);
 
-	discord_rpc.largeImageKey = "aimp";
-	discord_rpc.smallImageKey = "aimp";
-	discord_rpc.smallImageText = "AIMP";
-	discord_rpc.instance = false;
+	discordPresence.largeImageKey = "defaultcover";
+	discordPresence.smallImageKey = "aimp";
+	discordPresence.smallImageText = "AIMP";
+	discordPresence.instance = false;
 
-	discord->UpdateRP(&discord_rpc);
+	Discord_UpdatePresence(&discordPresence);
 
 	AIMPEvents Events = { 0 };
-	Events.State			= UpdatePlayerState;
-	Events.TrackInfo		= UpdateTrackInfo;
-	Events.TrackPosition	= UpdateTrackPosition;
+	Events.State = this->UpdatePlayerState;
+	Events.TrackInfo = this->UpdateTrackInfo;
+	Events.TrackPosition = this->UpdateTrackPosition;
 
 	aimpRemote->AIMPSetEvents(&Events);
 	aimpRemote->AIMPSetRemoteHandle(&AIMPRemoteHandle);
 
-	bFinalised = false;
 	return S_OK;
 }
 
-HRESULT WINAPI AIMPPlugin::Finalize()
+HRESULT WINAPI Plugin::Finalize()
 {
-	if (discord)
-	{
-		delete discord;
-	}
+	Discord_Shutdown();
 
 	if (aimpRemote)
 	{
@@ -101,63 +57,74 @@ HRESULT WINAPI AIMPPlugin::Finalize()
 	return S_OK;
 }
 
-VOID WINAPI AIMPPlugin::SystemNotification(INT NotifyID, IUnknown* Data) {}
-
-VOID AIMPPlugin::DiscordReady(VOID)
+VOID Plugin::DiscordReady(const DiscordUser* connectedUser)
 {
 	UpdateTrackInfo(&aimpRemote->AIMPGetTrackInfo());
 }
 
-VOID AIMPPlugin::UpdatePlayerState(INT AIMPRemote_State)
+VOID Plugin::UpdatePlayerState(INT AIMPRemote_State)
 {
-	if (AIMPRemote_State == AIMPREMOTE_PLAYER_STATE_PLAYING)
+	if (AIMPRemote_State != AIMPREMOTE_PLAYER_STATE_STOPPED)
 	{
 		UpdateTrackInfo(&aimpRemote->AIMPGetTrackInfo());
-		//discord->FastUpdate();
 	}
 	else
 	{
-		discord->ClearPresence();
+		Discord_ClearPresence();
 	}
 }
 
-VOID AIMPPlugin::UpdateTrackPosition(PAIMPPosition AIMPRemote_Position)
+VOID Plugin::UpdateTrackInfo(PAIMPTrackInfo AIMPRemote_TrackInfo)
 {
-	discord->RunCallbacks();
-}
+	if (strlen(AIMPRemote_TrackInfo->Artist) >= 128) strcpy(&AIMPRemote_TrackInfo->Artist[125], "...");
+	else if (strlen(AIMPRemote_TrackInfo->Artist) == 1) strcat(AIMPRemote_TrackInfo->Artist, " ");
 
-VOID AIMPPlugin::UpdateTrackInfo(PAIMPTrackInfo AIMPRemote_TrackInfo)
-{
-	discord_rpc.state			= AIMPRemote_TrackInfo->Artist;
-	discord_rpc.details			= AIMPRemote_TrackInfo->Title;
-	discord_rpc.largeImageText	= AIMPRemote_TrackInfo->Album;
+	if (strlen(AIMPRemote_TrackInfo->Title) >= 128) strcpy(&AIMPRemote_TrackInfo->Title[125], "...");
+	else if (strlen(AIMPRemote_TrackInfo->Title) == 1) strcat(AIMPRemote_TrackInfo->Title, " ");
 
-	discord_rpc.startTimestamp	= 0;
-	discord_rpc.endTimestamp	= 0;
+	if (strlen(AIMPRemote_TrackInfo->Album) >= 128) strcpy(&AIMPRemote_TrackInfo->Album[125], "...");
+	else if (strlen(AIMPRemote_TrackInfo->Album) == 1) strcat(AIMPRemote_TrackInfo->Album, " ");
 
-	int Duration = aimpRemote->AIMPGetPropertyValue(AIMP_RA_PROPERTY_PLAYER_DURATION) / 1000;
-	int Position = aimpRemote->AIMPGetPropertyValue(AIMP_RA_PROPERTY_PLAYER_POSITION) / 1000;
-	if (Duration != 0)
+	discordPresence.state = AIMPRemote_TrackInfo->Artist;
+	discordPresence.details = AIMPRemote_TrackInfo->Title;
+	discordPresence.largeImageText = AIMPRemote_TrackInfo->Album;
+
+	discordPresence.startTimestamp = 0;
+	discordPresence.endTimestamp = 0;
+
+	int state = aimpRemote->AIMPGetPropertyValue(AIMP_RA_PROPERTY_PLAYER_STATE);
+
+	if (state == AIMPREMOTE_PLAYER_STATE_PLAYING)
 	{
-		discord_rpc.startTimestamp = time(0);
-		discord_rpc.endTimestamp = discord_rpc.startTimestamp + Duration - Position;
+		int Duration = aimpRemote->AIMPGetPropertyValue(AIMP_RA_PROPERTY_PLAYER_DURATION) / 1000;
+		int Position = aimpRemote->AIMPGetPropertyValue(AIMP_RA_PROPERTY_PLAYER_POSITION) / 1000;
+		if (Duration != 0)
+		{
+			discordPresence.startTimestamp = time(0);
+			discordPresence.endTimestamp = discordPresence.startTimestamp + Duration - Position;
+		}
+		discordPresence.smallImageKey = "aimp_play";
+	}
+	else
+	{
+		discordPresence.smallImageKey = "aimp_pause";
 	}
 
 	if (strncmp(AIMPRemote_TrackInfo->FileName, "http://", 7) == 0 || strncmp(AIMPRemote_TrackInfo->FileName, "https://", 8) == 0)
 	{
 		if (!AIMPRemote_TrackInfo->Album[0])
 		{
-			discord_rpc.largeImageText = "Listening to URL";
+			discordPresence.largeImageText = "Listening to URL";
 		}
 
-		discord_rpc.largeImageKey = "aimp_radio";
+		discordPresence.largeImageKey = "aimp_radio";
 	}
-	else discord_rpc.largeImageKey = "aimp";
+	else discordPresence.largeImageKey = "defaultcover";
 
-	discord->UpdateRP(&discord_rpc);
+	Discord_UpdatePresence(&discordPresence);
+}
 
-	if (aimpRemote->AIMPGetPropertyValue(AIMP_RA_PROPERTY_PLAYER_STATE) == AIMPREMOTE_PLAYER_STATE_PLAYING)
-	{
-		discord->FastUpdate();
-	}
+VOID Plugin::UpdateTrackPosition(PAIMPPosition AIMPRemote_Position)
+{
+	Discord_RunCallbacks();
 }
