@@ -20,19 +20,17 @@ HRESULT WINAPI Plugin::Initialize(IAIMPCore* Core)
 		return E_ABORT;
 	}
 
-	aimpRemote = new AIMPRemote();
-
+	// Discord init
 	DiscordEventHandlers handlers = { 0 };
 	handlers.ready = this->DiscordReady;
 
 	Discord_Initialize(DISCORD_APPID, &handlers, 1, NULL);
-
-	discordPresence.largeImageKey = "defaultcover";
 	discordPresence.smallImageKey = "aimp";
 	discordPresence.smallImageText = "AIMP";
-	discordPresence.instance = false;
-
+	discordPresence.largeImageKey = "defaultcover";
 	Discord_UpdatePresence(&discordPresence);
+
+	aimpRemote = new AIMPRemote();
 
 	AIMPEvents Events = { 0 };
 	Events.State = this->UpdatePlayerState;
@@ -76,32 +74,40 @@ VOID Plugin::UpdatePlayerState(INT AIMPRemote_State)
 
 VOID Plugin::UpdateTrackInfo(PAIMPTrackInfo AIMPRemote_TrackInfo)
 {
-	if (strlen(AIMPRemote_TrackInfo->Artist) >= 128) strcpy(&AIMPRemote_TrackInfo->Artist[125], "...");
-	else if (strlen(AIMPRemote_TrackInfo->Artist) == 1) strcat(AIMPRemote_TrackInfo->Artist, " ");
+	{
+		std::size_t length = AIMPRemote_TrackInfo->Artist.length();
+		if (length >= 128) AIMPRemote_TrackInfo->Artist.replace(length - 3, length, "...");
+		else if (length == 1) AIMPRemote_TrackInfo->Artist.append(" ");
+	}
+	{
+		std::size_t length = AIMPRemote_TrackInfo->Title.length();
+		if (length >= 128) AIMPRemote_TrackInfo->Title.replace(length - 3, length, "...");
+		else if (length == 1) AIMPRemote_TrackInfo->Title.append(" ");
+	}
+	{
+		std::size_t length = AIMPRemote_TrackInfo->Album.length();
+		if (length >= 128) AIMPRemote_TrackInfo->Album.replace(length - 3, length, "...");
+		else if (length == 1) AIMPRemote_TrackInfo->Album.append(" ");
+	}
 
-	if (strlen(AIMPRemote_TrackInfo->Title) >= 128) strcpy(&AIMPRemote_TrackInfo->Title[125], "...");
-	else if (strlen(AIMPRemote_TrackInfo->Title) == 1) strcat(AIMPRemote_TrackInfo->Title, " ");
-
-	if (strlen(AIMPRemote_TrackInfo->Album) >= 128) strcpy(&AIMPRemote_TrackInfo->Album[125], "...");
-	else if (strlen(AIMPRemote_TrackInfo->Album) == 1) strcat(AIMPRemote_TrackInfo->Album, " ");
-
-	discordPresence.state = AIMPRemote_TrackInfo->Artist;
-	discordPresence.details = AIMPRemote_TrackInfo->Title;
-	discordPresence.largeImageText = AIMPRemote_TrackInfo->Album;
+	discordPresence.details = AIMPRemote_TrackInfo->Title.c_str();
+	discordPresence.state = AIMPRemote_TrackInfo->Artist.c_str();
+	discordPresence.largeImageText = AIMPRemote_TrackInfo->Album.c_str();
 
 	discordPresence.startTimestamp = 0;
 	discordPresence.endTimestamp = 0;
 
-	int state = aimpRemote->AIMPGetPropertyValue(AIMP_RA_PROPERTY_PLAYER_STATE);
-
-	if (state == AIMPREMOTE_PLAYER_STATE_PLAYING)
+	if (aimpRemote->AIMPGetPropertyValue(AIMP_RA_PROPERTY_PLAYER_STATE) == AIMPREMOTE_PLAYER_STATE_PLAYING)
 	{
-		int Duration = aimpRemote->AIMPGetPropertyValue(AIMP_RA_PROPERTY_PLAYER_DURATION) / 1000;
-		int Position = aimpRemote->AIMPGetPropertyValue(AIMP_RA_PROPERTY_PLAYER_POSITION) / 1000;
+		int Duration =
+			aimpRemote->AIMPGetPropertyValue(AIMP_RA_PROPERTY_PLAYER_DURATION) / 1000;
 		if (Duration != 0)
 		{
 			discordPresence.startTimestamp = time(0);
-			discordPresence.endTimestamp = discordPresence.startTimestamp + Duration - Position;
+			discordPresence.endTimestamp =
+				discordPresence.startTimestamp +
+				Duration -
+				aimpRemote->AIMPGetPropertyValue(AIMP_RA_PROPERTY_PLAYER_POSITION) / 1000;
 		}
 		discordPresence.smallImageKey = "aimp_play";
 	}
@@ -110,7 +116,7 @@ VOID Plugin::UpdateTrackInfo(PAIMPTrackInfo AIMPRemote_TrackInfo)
 		discordPresence.smallImageKey = "aimp_pause";
 	}
 
-	if (strncmp(AIMPRemote_TrackInfo->FileName, "http://", 7) == 0 || strncmp(AIMPRemote_TrackInfo->FileName, "https://", 8) == 0)
+	if (AIMPRemote_TrackInfo->FileName.compare(0, 7, "http://") == 0 || AIMPRemote_TrackInfo->FileName.compare(0, 8, "https://") == 0)
 	{
 		if (!AIMPRemote_TrackInfo->Album[0])
 		{
@@ -119,7 +125,7 @@ VOID Plugin::UpdateTrackInfo(PAIMPTrackInfo AIMPRemote_TrackInfo)
 
 		discordPresence.largeImageKey = "aimp_radio";
 	}
-	else discordPresence.largeImageKey = "defaultcover";
+	else discordPresence.largeImageKey ="defaultcover";
 
 	Discord_UpdatePresence(&discordPresence);
 }

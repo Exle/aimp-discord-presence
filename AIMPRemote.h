@@ -1,6 +1,7 @@
 #pragma once
 
 #include <apiRemote.h>
+#include <string>
 
 #define AIMPREMOTE_PLAYER_STATE_STOPPED		0
 #define AIMPREMOTE_PLAYER_STATE_PAUSED		1
@@ -10,35 +11,35 @@ CONST WCHAR AIMPRemoteClassName[] = L"AIMPRemoteApp";
 
 typedef struct AIMPVersion
 {
-	FLOAT Version;
-	INT Build;
+	float Version;
+	int Build;
 } *PAIMPVersion;
 
 typedef struct AIMPTrackInfo
 {
-	BOOL Active;
+	int Active;
 
-	DWORD BitRate;
-	DWORD Channels;
-	DWORD Duration;
-	INT64 FileSize;
-	DWORD FileMark;
-	DWORD SampleRate;
-	DWORD TrackNumber;
+	unsigned long BitRate;
+	unsigned long Channels;
+	unsigned long Duration;
+	signed long long FileSize;
+	unsigned long FileMark;
+	unsigned long SampleRate;
+	unsigned long TrackNumber;
 
-	DWORD AlbumLength;
-	DWORD ArtistLength;
-	DWORD DateLength;
-	DWORD FileNameLength;
-	DWORD GenreLength;
-	DWORD TitleLength;
+	unsigned long AlbumLength;
+	unsigned long ArtistLength;
+	unsigned long DateLength;
+	unsigned long FileNameLength;
+	unsigned long GenreLength;
+	unsigned long TitleLength;
 
-	PCHAR Album;
-	PCHAR Artist;
-	PCHAR Date;
-	PCHAR FileName;
-	PCHAR Genre;
-	PCHAR Title;
+	std::string Album;
+	std::string Artist;
+	std::string Date;
+	std::string FileName;
+	std::string Genre;
+	std::string Title;
 } *PAIMPTrackInfo;
 
 typedef struct AIMPPosition
@@ -61,19 +62,19 @@ public:
 	AIMPRemote();
 	~AIMPRemote();
 
-	static VOID AIMPExecuteCommand(INT ACommand);
-	static INT AIMPGetPropertyValue(INT APropertyID);
-	static BOOL AIMPSetPropertyValue(INT APropertyID, INT AValue);
-	static VOID AIMPSetEvents(AIMPEvents* Events);
-	static BOOL AIMPSetRemoteHandle(const HWND* Value);
+	static void AIMPExecuteCommand(int ACommand);
+	static int AIMPGetPropertyValue(int APropertyID);
+	static bool AIMPSetPropertyValue(int APropertyID, int AValue);
+	static void AIMPSetEvents(AIMPEvents* Events);
+	static bool AIMPSetRemoteHandle(const HWND* Value);
 	static AIMPTrackInfo AIMPGetTrackInfo();
 protected:
 	static LRESULT CALLBACK WMAIMPNotify(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 private:
-	BOOL InfoUpdatePlayerState();
-	BOOL InfoUpdateTrackPositionInfo();
-	BOOL InfoUpdateVersionInfo();
-	BOOL InfoUpdateTrackInfo();
+	bool InfoUpdatePlayerState();
+	bool InfoUpdateTrackPositionInfo();
+	bool InfoUpdateVersionInfo();
+	bool InfoUpdateTrackInfo();
 
 	HWND FAIMPRemoteHandle;
 	HWND MyWnd;
@@ -83,5 +84,5 @@ private:
 	AIMPVersion ARVersion = { 0 };
 	AIMPPosition ARPosition = { 0 };
 	AIMPEvents AREvents = { 0 };
-	INT ARState = AIMPREMOTE_PLAYER_STATE_STOPPED;
+	int ARState = AIMPREMOTE_PLAYER_STATE_STOPPED;
 };
