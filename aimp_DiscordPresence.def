@@ -1,4 +1,0 @@
-LIBRARY "aimp_DiscordPresence"
-
-EXPORTS
-    AIMPPluginGetHeader

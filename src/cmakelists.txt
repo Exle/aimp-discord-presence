@@ -1,0 +1,77 @@
+set( TARGET_NAME "aimp_discordPresence" )
+if( X86 )
+    set( DISCORD_ARCH "32" )
+    set( RUNTIME_OUTPUT_DIR_RELEASE "${CMAKE_CURRENT_SOURCE_DIR}/../output/Release/${TARGET_NAME}")
+    set( RUNTIME_OUTPUT_DIR_DEBUG "${CMAKE_CURRENT_SOURCE_DIR}/../output/Debug/${TARGET_NAME}")
+else()
+    set( DISCORD_ARCH "64" )
+    set( RUNTIME_OUTPUT_DIR_RELEASE "${CMAKE_CURRENT_SOURCE_DIR}/../output/Release/${TARGET_NAME}/x64")
+    set( RUNTIME_OUTPUT_DIR_DEBUG "${CMAKE_CURRENT_SOURCE_DIR}/../output/Debug/${TARGET_NAME}/x64")
+endif()
+
+OPTION( AUTOVERSIONING "Autoversioning" OFF )
+
+file( STRINGS "product.version" PRVERSION )
+
+list( POP_FRONT PRVERSION LINE )
+set( V_MAJOR ${LINE} )
+
+list( POP_FRONT PRVERSION LINE )
+set( V_MINOR ${LINE} )
+
+list( POP_FRONT PRVERSION LINE )
+set( V_RELEASE ${LINE} )
+
+add_definitions( -DV_MAJOR=${V_MAJOR} )
+add_definitions( -DV_MINOR=${V_MINOR} )
+add_definitions( -DV_RELEASE=${V_RELEASE} )
+
+if( AUTOVERSIONING AND EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/../.git/ )
+    find_package( Git REQUIRED )
+    if( Git_FOUND )
+        execute_process(
+            COMMAND git rev-list --count HEAD
+            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+            OUTPUT_VARIABLE V_BUILD
+        )
+        add_definitions( -DV_BUILD=${V_BUILD} )
+    endif()
+endif()
+
+message( Version: ${V_MAJOR}.${V_MINOR}.${V_RELEASE}.${V_BUILD} )
+
+set( HEADERS
+    aimp_discord_presence.h
+    version.h
+    utils.h
+)
+
+set( SOURCES
+    aimp_discord_presence.cpp
+)
+
+set( RESOURCES
+    aimp_discord_presence.def
+    version.rc
+)
+
+set( SOURCE_FILES
+    ${HEADERS}
+    ${SOURCES}
+    ${RESOURCES}
+)
+
+add_compile_definitions(_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING _CRT_SECURE_NO_WARNINGS)
+
+add_library( ${TARGET_NAME} SHARED ${SOURCE_FILES} )
+target_include_directories( ${TARGET_NAME} PRIVATE ${LIB_DIR}/aimp-sdk/Sources/Cpp )
+target_include_directories( ${TARGET_NAME} PRIVATE ${LIB_DIR}/aimp-sdk-cpp-wrapper/ )
+target_include_directories( ${TARGET_NAME} PRIVATE ${LIB_DIR}/discord-rpc/win${DISCORD_ARCH}-static/include )
+
+target_link_libraries( ${TARGET_NAME} PRIVATE ${LIB_DIR}/discord-rpc/win${DISCORD_ARCH}-static/lib/discord-rpc.lib )
+
+set_target_properties( ${TARGET_NAME}
+    PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY_RELEASE ${RUNTIME_OUTPUT_DIR_RELEASE}
+    RUNTIME_OUTPUT_DIRECTORY_DEBUG ${RUNTIME_OUTPUT_DIR_DEBUG}
+)

@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 512 512">
+	<defs>
+		<radialGradient id="gradient">
+			<stop offset="00%" stop-color="#F7CA00"/>
+			<stop offset="80%" stop-color="#F7C000"/>
+			<stop offset="100%" stop-color="#F7A200"/>
+		</radialGradient>
+	</defs>
+  
+	<g id="Logo">
+		<circle cx="256" cy="256" r="256" fill="#000000" />
+		<circle cx="256" cy="256" r="200" fill="url(#gradient)" />
+		<path d="M120 340 L392 340 L254 110 L120 340 Z" fill="#000000" transform="matrix(0, 1, -1, 0, 512, 0)"></path>
+	</g>
+</svg>

@@ -1,6 +1,0 @@
-[submodule "discord-rpc"]
-	path = discord-rpc
-	url = https://github.com/discordapp/discord-rpc.git
-[submodule "aimp_sdk"]
-	path = aimp_sdk
-	url = https://github.com/Exle/AIMP-SDK.git
