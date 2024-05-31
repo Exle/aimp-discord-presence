@@ -1,7 +1,3 @@
-// Microsoft Visual C++ generated resource script.
-//
-//#include "resource.h"
-
 #define APSTUDIO_READONLY_SYMBOLS
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -82,7 +78,7 @@ BEGIN
             VALUE "FileDescription", "Plugin for AIMP"
             VALUE "FileVersion", PL_VERSION_STRING
             VALUE "InternalName", "aimp_discordPresence.dll"
-            VALUE "LegalCopyright", "Copyright (C) 2022, Exle"
+            VALUE "LegalCopyright", "Copyright (C) 2024, Exle"
             VALUE "OriginalFilename", "aimp_discordPresence.dll"
             VALUE "ProductName", "AIMP Discord Presence"
             VALUE "ProductVersion", PL_VERSION_STRING

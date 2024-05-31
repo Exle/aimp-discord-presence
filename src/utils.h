@@ -25,16 +25,14 @@
 #include <type_traits>
 #include <iomanip>
 #include <sstream>
+#include <cwctype>
 
 struct Utils {
   template <typename T>
-  static typename std::enable_if<std::is_same<T, std::string>::value ||
-                            std::is_same<T, std::wstring>::value, T>::type
-  [[nodiscard]] Crop(T input, size_t maxlength) {
+  [[nodiscard]] static T Crop(const T& input, size_t maxlength) {
     if (input.size() > maxlength) {
       return input.substr(0, maxlength);
     }
-
     return input;
   }
 
@@ -45,33 +43,80 @@ struct Utils {
     return tmp;
   }
 
-  [[nodiscard]] static std::string Resize(std::string input) {
-    if (input.size() < 4) {
-      return input + std::string(4 - input.size(), ' ');
-    }
+  [[nodiscard]] static std::wstring ToWString(const std::string& input) {
+    int count = MultiByteToWideChar(CP_UTF8, 0, input.c_str(), static_cast<int>(input.length()), NULL, 0);
+    std::wstring tmp(count, L'\0');
+    MultiByteToWideChar(CP_UTF8, 0, input.c_str(), -1, &tmp[0], count);
+    return tmp;
+  }
 
+  template <typename T>
+  [[nodiscard]] static T Resize(const T& input) {
+    if (input.size() < 4) {
+      return input + T(4 - input.size(), ' ');
+    }
     return input;
   }
 
-  [[nodiscard]] static std::string UriEncode(const std::string& input) {
-    std::ostringstream escaped;
-    escaped.fill('0');
-    escaped << std::hex;
+  template<typename T>
+  [[nodiscard]] static T UriEncode(const T& input) {
+    using CharT = typename T::value_type;
+    std::basic_ostringstream<CharT> encoded;
 
-    for (char c : input) {
-      if (isalnum(c) || c == '-' || c == '_' || c == '.' || c == '~') {
-        escaped << c;
-        continue;
+    for (CharT c : input) {
+      if (is_safe_alnum(c) || c == static_cast<CharT>('-') || c == static_cast<CharT>('_') ||
+                              c == static_cast<CharT>('.') || c == static_cast<CharT>('~')) {
+        encoded << c;
+      } else {
+        encoded << static_cast<CharT>('%') << std::setw(2) << std::setfill(static_cast<CharT>('0')) << std::uppercase
+                << std::hex << static_cast<int>(static_cast<unsigned char>(c));
       }
-
-      escaped << std::uppercase;
-      escaped << '%' << std::setw(2) << static_cast<int>(static_cast<unsigned char>(c));
-      escaped << std::nouppercase;
     }
 
-    return escaped.str();
+    return encoded.str();
   }
 
+  template<typename T>
+  [[nodiscard]] static T UriDecode(const T& input) {
+    using CharT = typename T::value_type;
+    std::basic_ostringstream<CharT> decoded;
+
+    for (size_t i = 0; i < input.length(); ++i) {
+      if (input[i] == static_cast<CharT>('%') && i + 2 < input.length() && is_safe_xdigit(input[i + 1])
+                                                                        && is_safe_xdigit(input[i + 2])) {
+        std::basic_istringstream<CharT> hexStr(input.substr(i + 1, 2));
+        int hexValue;
+        hexStr >> std::hex >> hexValue;
+        decoded << static_cast<CharT>(hexValue);
+        i += 2;
+      } else if (input[i] == static_cast<CharT>('+')) {
+        decoded << static_cast<CharT>(' ');
+      } else {
+        decoded << input[i];
+      }
+    }
+
+    return decoded.str();
+  }
+
+ private:
+  template<typename CharT>
+  [[nodiscard]] static bool is_safe_alnum(CharT c) {
+    if constexpr (std::is_same_v<CharT, char>) {
+      return std::isalnum(static_cast<unsigned char>(c));
+    } else {
+      return std::iswalnum(c);
+    }
+  }
+
+  template<typename CharT>
+  [[nodiscard]] static bool is_safe_xdigit(CharT c) {
+    if constexpr (std::is_same_v<CharT, char>) {
+      return std::isxdigit(static_cast<unsigned char>(c));
+    } else {
+      return std::iswxdigit(c);
+    }
+  }
 };
 
 #endif  // AIMPDISCORDPRESENCE_SRC_UTILS_H_

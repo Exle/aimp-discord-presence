@@ -21,8 +21,11 @@
 #ifndef AIMPDISCORDPRESENCE_SRC_AIMP_DISCORD_PRESENCE_H_
 #define AIMPDISCORDPRESENCE_SRC_AIMP_DISCORD_PRESENCE_H_
 
+#include <string>
+
 #include "aimp_implements.h"
 #include "aimp_plugin.h"
+#include "aimp_core.h"
 
 class AimpDiscordPresence :
   public Aimp::Implements<Aimp::Plugin, Aimp::ExternalSettingsDialog> {
@@ -34,18 +37,41 @@ class AimpDiscordPresence :
   void Notification(int id, IUnknown* data) override;
   void ShowSettings(HWND parent_wnd) override;
 
- public:  // Events
-  void OnStreamStart( DWORD message, int param1 = NULL, void* param2 = nullptr, HRESULT* result = nullptr );
-  void OnStreamEnd( DWORD message, int param1 = NULL, void* param2 = nullptr, HRESULT* result = nullptr );
-  void OnPlayerState( DWORD message, int param1 = NULL, void* param2 = nullptr, HRESULT* result = nullptr );
-  void OnPropertyValue( DWORD message, int param1 = NULL, void* param2 = nullptr, HRESULT* result = nullptr );
+ private:
+  void OnStreamStartSubtrack();
+  void OnPlayerState(DWORD message, int param1 = NULL);
+  void OnPropertyValue(DWORD message, int param1 = NULL);
 
- private: // cofiguration data
+ private:
+  void InitializeMessageDispatcher();
+
+ private:
+  void SetInfo();
+  void SetSmallImage(int state = -1);
+  void SetTimestamp();
+
+ private:
+  void LoadConfig();
+
+  template <typename T>
+  void LoadConfigValue(Aimp::Core::Service::Config config, const std::wstring& key, T value);
+
   struct Properties {
-    unsigned long long application_id = 429559336982020107LL;
+    int64_t application_id = 429559336982020107LL;
     bool timestamp = false;
+    bool use_albumart = true;
+    struct State {
+      bool use_play = false;
+      std::wstring play_image = L"aimp_play";
+      bool use_pause = false;
+      std::wstring pause_image = L"aimp_pause";
+      bool use_radio = true;
+      std::wstring radio_image = L"https://raw.githubusercontent.com/Exle/aimp-discord-presence/main/"
+                           L".github/aimp_icons/animated/aimp_radio.gif";
+    };
+    State status;
   };
- public:
+
   Properties settings;
 };
 
