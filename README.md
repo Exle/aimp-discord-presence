@@ -16,6 +16,8 @@ Plugin for [AIMP](https://aimp.ru/) that changes the status of Discord, dependin
 ## Settings
 When closing AIMP, the plugin settings will be added to the configuration file ``Profile/AIMP.ini``. You can find the Profile folder in AIMP settings.
 
+**AIMP must be closed to edit ``Profile/AIMP.ini``.**
+
 Default:
 ```ini
 [DiscordPresence]
