@@ -33,7 +33,7 @@
 
 DiscordRichPresence discord_presence;
 
-extern "C" __declspec(dllexport) HRESULT WINAPI AIMPPluginGetHeader(void** Header) {
+__declspec(dllexport) HRESULT WINAPI AIMPPluginGetHeader(void** Header) {
   *Header = new AimpDiscordPresence();
   return S_OK;
 }

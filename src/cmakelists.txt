@@ -9,7 +9,7 @@ else()
   set( RUNTIME_OUTPUT_DIR_DEBUG "${CMAKE_CURRENT_SOURCE_DIR}/../output/Debug/${TARGET_NAME}/x64" )
 endif()
 
-OPTION( AUTOVERSIONING "Autoversioning" OFF )
+option( AUTOVERSIONING "Autoversioning" OFF )
 
 file( STRINGS "product.version" PRVERSION )
 

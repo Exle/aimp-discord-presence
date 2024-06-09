@@ -44,7 +44,6 @@
 #define PL_VERSION_RELEASE      V_RELEASE
 #define PL_VERSION_BUILD        V_BUILD
 
-
 #define STR(x) #x
 #define STRNAME(name) STR(name)
 
